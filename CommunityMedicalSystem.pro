@@ -12,7 +12,9 @@ SOURCES += \
     database/databasemanager.cpp \
     database/entities/patient.cpp \
     database/entities/doctor.cpp \
+    database/entities/visit.cpp \
     database/models/patientmodel.cpp \
+    database/models/visitmodel.cpp \
     addpatientdialog.cpp
 
 # 头文件
@@ -21,7 +23,9 @@ HEADERS += \
     database/databasemanager.h \
     database/entities/patient.h \
     database/entities/doctor.h \
+    database/entities/visit.h \
     database/models/patientmodel.h \
+    database/models/visitmodel.h \
     addpatientdialog.h
 
 FORMS += \
