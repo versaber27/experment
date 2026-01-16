@@ -1,0 +1,11 @@
+release/main.o
+release/mainwindow.o
+release/databasemanager.o
+release/patient.o
+release/doctor.o
+release/patientmodel.o
+release/addpatientdialog.o
+release/moc_mainwindow.o
+release/moc_databasemanager.o
+release/moc_patientmodel.o
+release/moc_addpatientdialog.o
