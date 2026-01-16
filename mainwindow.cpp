@@ -68,8 +68,8 @@ MainWindow::MainWindow(QWidget *parent)
 
     setupMenuBar();
     setupToolBar();
-    setupConnections();
     setupModels();
+    setupConnections();
     loadInitialData();
 
     statusBar()->showMessage("系统已就绪", 3000);
