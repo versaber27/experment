@@ -243,6 +243,9 @@ void MainWindow::setupModels()
     ui->tableView_medicines->horizontalHeader()->setStretchLastSection(true);
     ui->tableView_medicines->verticalHeader()->setVisible(false);
     ui->tableView_medicines->setAlternatingRowColors(true);
+
+    // 医疗记录模型
+    m_visitModel = new VisitModel(this, m_dbManager.database());
 }
 
 void MainWindow::loadInitialData()
@@ -252,6 +255,7 @@ void MainWindow::loadInitialData()
     m_doctorModel->select();
     m_appointmentModel->select();
     m_medicineModel->select();
+    m_visitModel->refresh();
 
     // 设置默认日期
     ui->dateEdit_appointment->setDate(QDate::currentDate());
@@ -265,6 +269,7 @@ void MainWindow::loadInitialData()
     onDoctorSelectionChanged();
     onAppointmentSelectionChanged();
     onMedicineSelectionChanged();
+    onVisitSelectionChanged();
 
     statusBar()->showMessage("数据加载完成", 2000);
 }
@@ -1069,6 +1074,272 @@ void MainWindow::onMedicineContextMenu(const QPoint &pos)
     menu.addAction("编辑药品", this, &MainWindow::onEditMedicine);
     menu.addAction("删除药品", this, &MainWindow::onDeleteMedicine);
     menu.exec(ui->tableView_medicines->mapToGlobal(pos));
+}
+
+// ==================== 医疗记录管理功能 ====================
+void MainWindow::onAddVisitClicked()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle("添加医疗记录");
+    dialog.resize(600, 500);
+    QFormLayout *layout = new QFormLayout(&dialog);
+
+    // 病人选择
+    QComboBox *patientCombo = new QComboBox(&dialog);
+    QSqlQuery patientQuery(m_dbManager.database());
+    if (patientQuery.exec("SELECT id, name, patient_id FROM patients ORDER BY name")) {
+        while (patientQuery.next()) {
+            int id = patientQuery.value(0).toInt();
+            QString name = patientQuery.value(1).toString();
+            QString patientId = patientQuery.value(2).toString();
+            patientCombo->addItem(QString("%1 (%2)").arg(name).arg(patientId), id);
+        }
+    }
+
+    // 医生选择
+    QComboBox *doctorCombo = new QComboBox(&dialog);
+    QSqlQuery doctorQuery(m_dbManager.database());
+    if (doctorQuery.exec("SELECT id, name, department FROM doctors WHERE is_active = 1 ORDER BY name")) {
+        while (doctorQuery.next()) {
+            int id = doctorQuery.value(0).toInt();
+            QString name = doctorQuery.value(1).toString();
+            QString department = doctorQuery.value(2).toString();
+            doctorCombo->addItem(QString("%1 - %2").arg(name).arg(department), id);
+        }
+    }
+
+    // 就诊日期时间
+    QDateTimeEdit *visitDateTimeEdit = new QDateTimeEdit(QDateTime::currentDateTime(), &dialog);
+    visitDateTimeEdit->setCalendarPopup(true);
+    visitDateTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");
+
+    // 症状
+    QTextEdit *symptomsEdit = new QTextEdit(&dialog);
+    symptomsEdit->setPlaceholderText("请输入病人症状...");
+    symptomsEdit->setMaximumHeight(100);
+
+    // 诊断
+    QTextEdit *diagnosisEdit = new QTextEdit(&dialog);
+    diagnosisEdit->setPlaceholderText("请输入诊断结果...");
+    diagnosisEdit->setMaximumHeight(100);
+
+    // 治疗方案
+    QTextEdit *treatmentEdit = new QTextEdit(&dialog);
+    treatmentEdit->setPlaceholderText("请输入治疗方案...");
+    treatmentEdit->setMaximumHeight(100);
+
+    // 备注
+    QTextEdit *notesEdit = new QTextEdit(&dialog);
+    notesEdit->setPlaceholderText("请输入备注信息...");
+    notesEdit->setMaximumHeight(100);
+
+    // 添加到布局
+    layout->addRow("病人:", patientCombo);
+    layout->addRow("医生:", doctorCombo);
+    layout->addRow("就诊时间:", visitDateTimeEdit);
+    layout->addRow("症状:", symptomsEdit);
+    layout->addRow("诊断:", diagnosisEdit);
+    layout->addRow("治疗方案:", treatmentEdit);
+    layout->addRow("备注:", notesEdit);
+
+    // 按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addRow(buttonBox);
+
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        int patientId = patientCombo->currentData().toInt();
+        int doctorId = doctorCombo->currentData().toInt();
+        QDateTime visitDate = visitDateTimeEdit->dateTime();
+        QString symptoms = symptomsEdit->toPlainText();
+        QString diagnosis = diagnosisEdit->toPlainText();
+        QString treatment = treatmentEdit->toPlainText();
+        QString notes = notesEdit->toPlainText();
+
+        QSqlQuery query(m_dbManager.database());
+        query.prepare("INSERT INTO visits (patient_id, doctor_id, visit_date, symptoms, diagnosis, treatment, notes) "
+                      "VALUES (:patient_id, :doctor_id, :visit_date, :symptoms, :diagnosis, :treatment, :notes)");
+        query.bindValue(":patient_id", patientId);
+        query.bindValue(":doctor_id", doctorId);
+        query.bindValue(":visit_date", visitDate.toString("yyyy-MM-dd HH:mm:ss"));
+        query.bindValue(":symptoms", symptoms);
+        query.bindValue(":diagnosis", diagnosis);
+        query.bindValue(":treatment", treatment);
+        query.bindValue(":notes", notes);
+
+        if (query.exec()) {
+            m_visitModel->refresh();
+            QMessageBox::information(this, "成功", "医疗记录添加成功！");
+        } else {
+            QMessageBox::warning(this, "失败",
+                                 QString("添加失败：%1").arg(query.lastError().text()));
+        }
+    }
+}
+
+void MainWindow::onEditVisitClicked()
+{
+    QModelIndexList selection = ui->tableView_visits->selectionModel()->selectedRows();
+    if (selection.isEmpty()) {
+        QMessageBox::warning(this, "警告", "请先选择要编辑的医疗记录");
+        return;
+    }
+
+    int row = selection.first().row();
+    QSqlRecord record = m_visitModel->record(row);
+    int id = record.value("id").toInt();
+    int patientId = record.value("patient_id").toInt();
+    int doctorId = record.value("doctor_id").toInt();
+    QDateTime visitDate = record.value("visit_date").toDateTime();
+    QString symptoms = record.value("symptoms").toString();
+    QString diagnosis = record.value("diagnosis").toString();
+    QString treatment = record.value("treatment").toString();
+    QString notes = record.value("notes").toString();
+
+    QDialog dialog(this);
+    dialog.setWindowTitle("编辑医疗记录");
+    dialog.resize(600, 500);
+    QFormLayout *layout = new QFormLayout(&dialog);
+
+    // 病人选择
+    QComboBox *patientCombo = new QComboBox(&dialog);
+    QSqlQuery patientQuery(m_dbManager.database());
+    if (patientQuery.exec("SELECT id, name, patient_id FROM patients ORDER BY name")) {
+        while (patientQuery.next()) {
+            int pid = patientQuery.value(0).toInt();
+            QString name = patientQuery.value(1).toString();
+            QString patientIdStr = patientQuery.value(2).toString();
+            patientCombo->addItem(QString("%1 (%2)").arg(name).arg(patientIdStr), pid);
+            if (pid == patientId) {
+                patientCombo->setCurrentIndex(patientCombo->count() - 1);
+            }
+        }
+    }
+
+    // 医生选择
+    QComboBox *doctorCombo = new QComboBox(&dialog);
+    QSqlQuery doctorQuery(m_dbManager.database());
+    if (doctorQuery.exec("SELECT id, name, department FROM doctors WHERE is_active = 1 ORDER BY name")) {
+        while (doctorQuery.next()) {
+            int did = doctorQuery.value(0).toInt();
+            QString name = doctorQuery.value(1).toString();
+            QString department = doctorQuery.value(2).toString();
+            doctorCombo->addItem(QString("%1 - %2").arg(name).arg(department), did);
+            if (did == doctorId) {
+                doctorCombo->setCurrentIndex(doctorCombo->count() - 1);
+            }
+        }
+    }
+
+    // 就诊日期时间
+    QDateTimeEdit *visitDateTimeEdit = new QDateTimeEdit(visitDate, &dialog);
+    visitDateTimeEdit->setCalendarPopup(true);
+    visitDateTimeEdit->setDisplayFormat("yyyy-MM-dd HH:mm");
+
+    // 症状
+    QTextEdit *symptomsEdit = new QTextEdit(symptoms, &dialog);
+    symptomsEdit->setMaximumHeight(100);
+
+    // 诊断
+    QTextEdit *diagnosisEdit = new QTextEdit(diagnosis, &dialog);
+    diagnosisEdit->setMaximumHeight(100);
+
+    // 治疗方案
+    QTextEdit *treatmentEdit = new QTextEdit(treatment, &dialog);
+    treatmentEdit->setMaximumHeight(100);
+
+    // 备注
+    QTextEdit *notesEdit = new QTextEdit(notes, &dialog);
+    notesEdit->setMaximumHeight(100);
+
+    // 添加到布局
+    layout->addRow("病人:", patientCombo);
+    layout->addRow("医生:", doctorCombo);
+    layout->addRow("就诊时间:", visitDateTimeEdit);
+    layout->addRow("症状:", symptomsEdit);
+    layout->addRow("诊断:", diagnosisEdit);
+    layout->addRow("治疗方案:", treatmentEdit);
+    layout->addRow("备注:", notesEdit);
+
+    // 按钮
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(
+        QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addRow(buttonBox);
+
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() == QDialog::Accepted) {
+        QSqlQuery query(m_dbManager.database());
+        query.prepare("UPDATE visits SET patient_id = ?, doctor_id = ?, visit_date = ?, "
+                      "symptoms = ?, diagnosis = ?, treatment = ?, notes = ? WHERE id = ?");
+        query.addBindValue(patientCombo->currentData().toInt());
+        query.addBindValue(doctorCombo->currentData().toInt());
+        query.addBindValue(visitDateTimeEdit->dateTime().toString("yyyy-MM-dd HH:mm:ss"));
+        query.addBindValue(symptomsEdit->toPlainText());
+        query.addBindValue(diagnosisEdit->toPlainText());
+        query.addBindValue(treatmentEdit->toPlainText());
+        query.addBindValue(notesEdit->toPlainText());
+        query.addBindValue(id);
+
+        if (query.exec()) {
+            m_visitModel->refresh();
+            QMessageBox::information(this, "成功", "医疗记录更新成功！");
+        } else {
+            QMessageBox::warning(this, "失败",
+                                 QString("更新失败：%1").arg(query.lastError().text()));
+        }
+    }
+}
+
+void MainWindow::onDeleteVisitClicked()
+{
+    QModelIndexList selection = ui->tableView_visits->selectionModel()->selectedRows();
+    if (selection.isEmpty()) {
+        QMessageBox::warning(this, "警告", "请先选择要删除的医疗记录");
+        return;
+    }
+
+    int row = selection.first().row();
+    int id = m_visitModel->data(m_visitModel->index(row, 0)).toInt();
+
+    QMessageBox::StandardButton reply;
+    reply = QMessageBox::question(this, "确认删除",
+                                  "确定要删除该医疗记录吗？",
+                                  QMessageBox::Yes | QMessageBox::No);
+
+    if (reply == QMessageBox::Yes) {
+        QSqlQuery query(m_dbManager.database());
+        query.prepare("DELETE FROM visits WHERE id = ?");
+        query.addBindValue(id);
+
+        if (query.exec()) {
+            m_visitModel->refresh();
+            QMessageBox::information(this, "成功", "医疗记录删除成功！");
+        } else {
+            QMessageBox::warning(this, "失败",
+                                 QString("删除失败：%1").arg(query.lastError().text()));
+        }
+    }
+}
+
+void MainWindow::onSearchVisit()
+{
+    QLineEdit *searchEdit = findChild<QLineEdit*>("lineEdit_search_visit");
+    if (!searchEdit) return;
+    
+    QString keyword = searchEdit->text().trimmed();
+    m_visitModel->search(keyword);
+}
+
+void MainWindow::onVisitSelectionChanged()
+{
+    bool hasSelection = !ui->tableView_visits->selectionModel()->selectedRows().isEmpty();
+    ui->btn_edit_visit->setEnabled(hasSelection);
+    ui->btn_delete_visit->setEnabled(hasSelection);
 }
 
 void MainWindow::onEditAppointment()

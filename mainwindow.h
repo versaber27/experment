@@ -5,6 +5,7 @@
 #include <QSqlTableModel>
 #include "database/databasemanager.h"
 #include "database/models/patientmodel.h"
+#include "database/models/visitmodel.h"
 #include "addpatientdialog.h"
 
 QT_BEGIN_NAMESPACE
@@ -56,6 +57,12 @@ private slots:
     void onCheckLowStock();
     void onMedicineContextMenu(const QPoint &pos);    // 新增
 
+    // 医疗记录管理
+    void onAddVisitClicked();
+    void onEditVisitClicked();
+    void onDeleteVisitClicked();
+    void onSearchVisit();
+
     // 统计分析
     void onGenerateDailyReport();
     void onGenerateMonthlyReport();
@@ -66,6 +73,7 @@ private slots:
     void onDoctorSelectionChanged();
     void onAppointmentSelectionChanged();
     void onMedicineSelectionChanged();
+    void onVisitSelectionChanged();
 
 private:
     void setupUI();
@@ -78,11 +86,12 @@ private:
 
     Ui::MainWindow *ui;
 
-    // 数据模型
+    // Data models
     PatientModel *m_patientModel;
     QSqlTableModel *m_doctorModel;
     QSqlTableModel *m_appointmentModel;
     QSqlTableModel *m_medicineModel;
+    VisitModel *m_visitModel;
 
     // 数据库管理器
     DatabaseManager &m_dbManager;
