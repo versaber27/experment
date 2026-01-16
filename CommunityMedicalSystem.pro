@@ -17,6 +17,7 @@ SOURCES += \
     database/entities/prescriptionmedicine.cpp \
     database/entities/role.cpp \
     database/entities/user.cpp \
+    database/entities/medicine.cpp \
     database/models/patientmodel.cpp \
     database/models/visitmodel.cpp \
     database/models/prescriptionmodel.cpp \
@@ -34,6 +35,7 @@ HEADERS += \
     database/entities/prescriptionmedicine.h \
     database/entities/role.h \
     database/entities/user.h \
+    database/entities/medicine.h \
     database/models/patientmodel.h \
     database/models/visitmodel.h \
     database/models/prescriptionmodel.h \

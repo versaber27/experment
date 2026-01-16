@@ -139,12 +139,13 @@ bool DatabaseManager::createDoctorsTable()
 
 bool DatabaseManager::createMedicinesTable()
 {
-    QString queryStr =
+    QString queryStr = 
         "CREATE TABLE IF NOT EXISTS medicines ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "name TEXT NOT NULL,"
         "category TEXT,"
         "stock INTEGER DEFAULT 0,"
+        "warning_threshold INTEGER DEFAULT 10,"
         "unit_price REAL,"
         "expiry_date DATE"
         ");";
