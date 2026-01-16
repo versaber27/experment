@@ -72,18 +72,9 @@ bool DatabaseManager::createTables()
         qWarning() << "Failed to enable foreign keys:" << query.lastError().text();
     }
 
-    // 为了修复Schema不匹配问题，先尝试删除旧表 (开发阶段临时方案)
-    // 注意：这将清空所有数据！
-    QStringList tables = {"visits", "appointments", "medicines", "doctors", "patients"};
-    for (const QString& table : tables) {
-        // 这里我们简单粗暴地drop掉，确保schema更新
-        // 在生产环境中应该做schema迁移
-        // query.exec("DROP TABLE IF EXISTS " + table); 
-        // 暂时注释掉，以免误删数据。
-        // 但为了解决当前问题，必须更新Schema。
-        // 既然用户已经遇到问题，我们假设重新建表是最好的修复方式。
-        query.exec("DROP TABLE IF EXISTS " + table);
-    }
+    // 不再删除表，避免数据丢失。
+    // 使用CREATE TABLE IF NOT EXISTS确保表结构自动更新（仅添加新字段）
+    // 对于字段修改等复杂Schema变更，建议使用专门的迁移工具
 
     // 创建所有表
     return createPatientsTable() &&
