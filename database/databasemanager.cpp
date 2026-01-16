@@ -384,3 +384,120 @@ bool DatabaseManager::updatePrescriptionStatus(int prescriptionId, const QString
     }
     return true;
 }
+
+bool DatabaseManager::checkMedicineStock(int medicineId, int requiredQuantity)
+{
+    QSqlQuery query(m_database);
+    query.prepare("SELECT stock FROM medicines WHERE id = :medicineId");
+    query.bindValue(":medicineId", medicineId);
+
+    if (!query.exec() || !query.next()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to check medicine stock:" << m_lastError;
+        return false;
+    }
+
+    int currentStock = query.value("stock").toInt();
+    return currentStock >= requiredQuantity;
+}
+
+bool DatabaseManager::updateMedicineStock(int medicineId, int quantityChange)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE medicines SET stock = stock + :quantityChange WHERE id = :medicineId");
+    query.bindValue(":medicineId", medicineId);
+    query.bindValue(":quantityChange", quantityChange);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update medicine stock:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::decreaseMedicineStockForPrescription(int prescriptionId)
+{
+    // 开始事务
+    m_database.transaction();
+
+    // 获取处方药品列表
+    QSqlQuery query(m_database);
+    query.prepare("SELECT medicine_id, quantity FROM prescription_medicines WHERE prescription_id = :prescriptionId");
+    query.bindValue(":prescriptionId", prescriptionId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to get prescription medicines:" << m_lastError;
+        m_database.rollback();
+        return false;
+    }
+
+    // 逐个减少药品库存
+    while (query.next()) {
+        int medicineId = query.value("medicine_id").toInt();
+        int quantity = query.value("quantity").toInt();
+
+        // 检查库存是否足够
+        if (!checkMedicineStock(medicineId, quantity)) {
+            m_database.rollback();
+            return false;
+        }
+
+        // 减少库存
+        if (!updateMedicineStock(medicineId, -quantity)) {
+            m_database.rollback();
+            return false;
+        }
+    }
+
+    // 提交事务
+    if (!m_database.commit()) {
+        m_lastError = m_database.lastError().text();
+        qWarning() << "Failed to commit transaction:" << m_lastError;
+        m_database.rollback();
+        return false;
+    }
+
+    return true;
+}
+
+bool DatabaseManager::increaseMedicineStockForPrescription(int prescriptionId)
+{
+    // 开始事务
+    m_database.transaction();
+
+    // 获取处方药品列表
+    QSqlQuery query(m_database);
+    query.prepare("SELECT medicine_id, quantity FROM prescription_medicines WHERE prescription_id = :prescriptionId");
+    query.bindValue(":prescriptionId", prescriptionId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to get prescription medicines:" << m_lastError;
+        m_database.rollback();
+        return false;
+    }
+
+    // 逐个增加药品库存
+    while (query.next()) {
+        int medicineId = query.value("medicine_id").toInt();
+        int quantity = query.value("quantity").toInt();
+
+        // 增加库存
+        if (!updateMedicineStock(medicineId, quantity)) {
+            m_database.rollback();
+            return false;
+        }
+    }
+
+    // 提交事务
+    if (!m_database.commit()) {
+        m_lastError = m_database.lastError().text();
+        qWarning() << "Failed to commit transaction:" << m_lastError;
+        m_database.rollback();
+        return false;
+    }
+
+    return true;
+}

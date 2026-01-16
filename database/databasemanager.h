@@ -55,6 +55,12 @@ private:
     bool updatePrescriptionMedicine(int prescriptionMedicineId, int prescriptionId, int medicineId, int quantity, double unitPrice, const QString& dosage, const QString& usage);
     bool deletePrescriptionMedicine(int prescriptionMedicineId);
     bool updatePrescriptionStatus(int prescriptionId, const QString& status);
+    
+    // 处方与药品库存联动
+    bool checkMedicineStock(int medicineId, int requiredQuantity);
+    bool updateMedicineStock(int medicineId, int quantityChange);
+    bool decreaseMedicineStockForPrescription(int prescriptionId);
+    bool increaseMedicineStockForPrescription(int prescriptionId);
 
     // 成员变量
     QString m_databasePath;
