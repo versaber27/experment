@@ -238,7 +238,7 @@ bool DatabaseManager::createPrescriptionsTable()
 
 bool DatabaseManager::createPrescriptionMedicinesTable()
 {
-    QString queryStr =
+    QString queryStr = 
         "CREATE TABLE IF NOT EXISTS prescription_medicines ("
         "id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "prescription_id INTEGER NOT NULL,"
@@ -256,6 +256,130 @@ bool DatabaseManager::createPrescriptionMedicinesTable()
     if (!query.exec(queryStr)) {
         m_lastError = query.lastError().text();
         qWarning() << "Failed to create prescription_medicines table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::addPrescription(const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount)
+{
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO prescriptions (prescription_no, visit_id, patient_id, doctor_id, total_amount) VALUES (:prescriptionNo, :visitId, :patientId, :doctorId, :totalAmount)");
+    query.bindValue(":prescriptionNo", prescriptionNo);
+    query.bindValue(":visitId", visitId);
+    query.bindValue(":patientId", patientId);
+    query.bindValue(":doctorId", doctorId);
+    query.bindValue(":totalAmount", totalAmount);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add prescription:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updatePrescription(int prescriptionId, const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount, const QString& status)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE prescriptions SET prescription_no = :prescriptionNo, visit_id = :visitId, patient_id = :patientId, doctor_id = :doctorId, total_amount = :totalAmount, status = :status WHERE id = :prescriptionId");
+    query.bindValue(":prescriptionId", prescriptionId);
+    query.bindValue(":prescriptionNo", prescriptionNo);
+    query.bindValue(":visitId", visitId);
+    query.bindValue(":patientId", patientId);
+    query.bindValue(":doctorId", doctorId);
+    query.bindValue(":totalAmount", totalAmount);
+    query.bindValue(":status", status);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update prescription:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deletePrescription(int prescriptionId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM prescriptions WHERE id = :prescriptionId");
+    query.bindValue(":prescriptionId", prescriptionId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete prescription:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::addPrescriptionMedicine(int prescriptionId, int medicineId, int quantity, double unitPrice, const QString& dosage, const QString& usage)
+{
+    double totalPrice = quantity * unitPrice;
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO prescription_medicines (prescription_id, medicine_id, quantity, unit_price, total_price, dosage, usage) VALUES (:prescriptionId, :medicineId, :quantity, :unitPrice, :totalPrice, :dosage, :usage)");
+    query.bindValue(":prescriptionId", prescriptionId);
+    query.bindValue(":medicineId", medicineId);
+    query.bindValue(":quantity", quantity);
+    query.bindValue(":unitPrice", unitPrice);
+    query.bindValue(":totalPrice", totalPrice);
+    query.bindValue(":dosage", dosage);
+    query.bindValue(":usage", usage);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add prescription medicine:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updatePrescriptionMedicine(int prescriptionMedicineId, int prescriptionId, int medicineId, int quantity, double unitPrice, const QString& dosage, const QString& usage)
+{
+    double totalPrice = quantity * unitPrice;
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE prescription_medicines SET prescription_id = :prescriptionId, medicine_id = :medicineId, quantity = :quantity, unit_price = :unitPrice, total_price = :totalPrice, dosage = :dosage, usage = :usage WHERE id = :prescriptionMedicineId");
+    query.bindValue(":prescriptionMedicineId", prescriptionMedicineId);
+    query.bindValue(":prescriptionId", prescriptionId);
+    query.bindValue(":medicineId", medicineId);
+    query.bindValue(":quantity", quantity);
+    query.bindValue(":unitPrice", unitPrice);
+    query.bindValue(":totalPrice", totalPrice);
+    query.bindValue(":dosage", dosage);
+    query.bindValue(":usage", usage);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update prescription medicine:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deletePrescriptionMedicine(int prescriptionMedicineId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM prescription_medicines WHERE id = :prescriptionMedicineId");
+    query.bindValue(":prescriptionMedicineId", prescriptionMedicineId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete prescription medicine:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updatePrescriptionStatus(int prescriptionId, const QString& status)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE prescriptions SET status = :status WHERE id = :prescriptionId");
+    query.bindValue(":prescriptionId", prescriptionId);
+    query.bindValue(":status", status);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update prescription status:" << m_lastError;
         return false;
     }
     return true;

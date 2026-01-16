@@ -46,6 +46,15 @@ private:
     bool createVisitsTable();
     bool createPrescriptionsTable();
     bool createPrescriptionMedicinesTable();
+    
+    // 处方相关操作
+    bool addPrescription(const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount);
+    bool updatePrescription(int prescriptionId, const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount, const QString& status);
+    bool deletePrescription(int prescriptionId);
+    bool addPrescriptionMedicine(int prescriptionId, int medicineId, int quantity, double unitPrice, const QString& dosage, const QString& usage);
+    bool updatePrescriptionMedicine(int prescriptionMedicineId, int prescriptionId, int medicineId, int quantity, double unitPrice, const QString& dosage, const QString& usage);
+    bool deletePrescriptionMedicine(int prescriptionMedicineId);
+    bool updatePrescriptionStatus(int prescriptionId, const QString& status);
 
     // 成员变量
     QString m_databasePath;

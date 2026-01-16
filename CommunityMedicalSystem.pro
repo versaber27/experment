@@ -17,6 +17,7 @@ SOURCES += \
     database/entities/prescriptionmedicine.cpp \
     database/models/patientmodel.cpp \
     database/models/visitmodel.cpp \
+    database/models/prescriptionmodel.cpp \
     addpatientdialog.cpp
 
 # 头文件
@@ -30,6 +31,7 @@ HEADERS += \
     database/entities/prescriptionmedicine.h \
     database/models/patientmodel.h \
     database/models/visitmodel.h \
+    database/models/prescriptionmodel.h \
     addpatientdialog.h
 
 FORMS += \
