@@ -85,7 +85,9 @@ bool DatabaseManager::createTables()
            createAppointmentsTable() &&
            createVisitsTable() &&
            createPrescriptionsTable() &&
-           createPrescriptionMedicinesTable();
+           createPrescriptionMedicinesTable() &&
+           createChargesTable() &&
+           createChargeRecordsTable();
 }
 
 bool DatabaseManager::createPatientsTable()
@@ -259,6 +261,56 @@ bool DatabaseManager::createPrescriptionMedicinesTable()
     if (!query.exec(queryStr)) {
         m_lastError = query.lastError().text();
         qWarning() << "Failed to create prescription_medicines table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createChargesTable()
+{
+    QString queryStr = 
+        "CREATE TABLE IF NOT EXISTS charges ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "charge_code TEXT UNIQUE NOT NULL,"
+        "name TEXT NOT NULL,"
+        "category TEXT,"
+        "price REAL NOT NULL,"
+        "description TEXT,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create charges table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createChargeRecordsTable()
+{
+    QString queryStr = 
+        "CREATE TABLE IF NOT EXISTS charge_records ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "record_no TEXT UNIQUE NOT NULL,"
+        "patient_id INTEGER NOT NULL,"
+        "visit_id INTEGER,"
+        "total_amount REAL NOT NULL,"
+        "payment_method TEXT,"
+        "payment_status TEXT DEFAULT 'unpaid',"
+        "payment_date DATETIME,"
+        "created_by INTEGER NOT NULL,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "FOREIGN KEY (patient_id) REFERENCES patients(id),"
+        "FOREIGN KEY (visit_id) REFERENCES visits(id),"
+        "FOREIGN KEY (created_by) REFERENCES users(id)"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create charge_records table:" << m_lastError;
         return false;
     }
     return true;
