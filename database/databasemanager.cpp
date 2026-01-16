@@ -81,7 +81,9 @@ bool DatabaseManager::createTables()
            createDoctorsTable() &&
            createMedicinesTable() &&
            createAppointmentsTable() &&
-           createVisitsTable();
+           createVisitsTable() &&
+           createPrescriptionsTable() &&
+           createPrescriptionMedicinesTable();
 }
 
 bool DatabaseManager::createPatientsTable()
@@ -203,6 +205,57 @@ bool DatabaseManager::createVisitsTable()
     if (!query.exec(queryStr)) {
         m_lastError = query.lastError().text();
         qWarning() << "Failed to create visits table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createPrescriptionsTable()
+{
+    QString queryStr =
+        "CREATE TABLE IF NOT EXISTS prescriptions ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "prescription_no TEXT UNIQUE NOT NULL,"
+        "visit_id INTEGER NOT NULL,"
+        "patient_id INTEGER NOT NULL,"
+        "doctor_id INTEGER NOT NULL,"
+        "create_date DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "total_amount REAL DEFAULT 0,"
+        "status TEXT DEFAULT '有效',"
+        "FOREIGN KEY (visit_id) REFERENCES visits(id),"
+        "FOREIGN KEY (patient_id) REFERENCES patients(id),"
+        "FOREIGN KEY (doctor_id) REFERENCES doctors(id)"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create prescriptions table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createPrescriptionMedicinesTable()
+{
+    QString queryStr =
+        "CREATE TABLE IF NOT EXISTS prescription_medicines ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "prescription_id INTEGER NOT NULL,"
+        "medicine_id INTEGER NOT NULL,"
+        "quantity INTEGER NOT NULL,"
+        "unit_price REAL NOT NULL,"
+        "total_price REAL NOT NULL,"
+        "dosage TEXT,"
+        "usage TEXT,"
+        "FOREIGN KEY (prescription_id) REFERENCES prescriptions(id),"
+        "FOREIGN KEY (medicine_id) REFERENCES medicines(id)"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create prescription_medicines table:" << m_lastError;
         return false;
     }
     return true;

@@ -44,6 +44,8 @@ private:
     bool createMedicinesTable();
     bool createAppointmentsTable();
     bool createVisitsTable();
+    bool createPrescriptionsTable();
+    bool createPrescriptionMedicinesTable();
 
     // 成员变量
     QString m_databasePath;
