@@ -46,6 +46,8 @@ private:
     bool createVisitsTable();
     bool createPrescriptionsTable();
     bool createPrescriptionMedicinesTable();
+    bool createUsersTable();
+    bool createRolesTable();
     
     // 处方相关操作
     bool addPrescription(const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount);

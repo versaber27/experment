@@ -77,7 +77,9 @@ bool DatabaseManager::createTables()
     // 对于字段修改等复杂Schema变更，建议使用专门的迁移工具
 
     // 创建所有表
-    return createPatientsTable() &&
+    return createRolesTable() &&
+           createUsersTable() &&
+           createPatientsTable() &&
            createDoctorsTable() &&
            createMedicinesTable() &&
            createAppointmentsTable() &&
@@ -256,6 +258,51 @@ bool DatabaseManager::createPrescriptionMedicinesTable()
     if (!query.exec(queryStr)) {
         m_lastError = query.lastError().text();
         qWarning() << "Failed to create prescription_medicines table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createRolesTable()
+{
+    QString queryStr = 
+        "CREATE TABLE IF NOT EXISTS roles ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "role_name TEXT UNIQUE NOT NULL,"
+        "description TEXT,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create roles table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createUsersTable()
+{
+    QString queryStr = 
+        "CREATE TABLE IF NOT EXISTS users ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "username TEXT UNIQUE NOT NULL,"
+        "password_hash TEXT NOT NULL,"
+        "role_id INTEGER NOT NULL,"
+        "real_name TEXT NOT NULL,"
+        "phone TEXT,"
+        "email TEXT,"
+        "is_active INTEGER DEFAULT 1,"
+        "last_login DATETIME,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "FOREIGN KEY (role_id) REFERENCES roles(id)"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create users table:" << m_lastError;
         return false;
     }
     return true;
