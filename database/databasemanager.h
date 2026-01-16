@@ -50,6 +50,7 @@ private:
     bool createUsersTable();
     bool createChargesTable();
     bool createChargeRecordsTable();
+    bool createLogsTable();
     
     // 处方相关操作
     bool addPrescription(const QString& prescriptionNo, int visitId, int patientId, int doctorId, double totalAmount);
@@ -92,6 +93,9 @@ private:
     bool updateChargeRecord(int chargeRecordId, const QString& paymentMethod, const QString& paymentStatus);
     bool updateChargeRecordPaymentStatus(int chargeRecordId, const QString& paymentStatus);
     bool deleteChargeRecord(int chargeRecordId);
+    
+    // 日志记录相关操作
+    bool logOperation(int userId, const QString& operationType, const QString& entityType, int entityId, const QString& description);
 
     // 成员变量
     QString m_databasePath;

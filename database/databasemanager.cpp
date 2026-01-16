@@ -87,7 +87,8 @@ bool DatabaseManager::createTables()
            createPrescriptionsTable() &&
            createPrescriptionMedicinesTable() &&
            createChargesTable() &&
-           createChargeRecordsTable();
+           createChargeRecordsTable() &&
+           createLogsTable();
 }
 
 bool DatabaseManager::createPatientsTable()
@@ -311,6 +312,47 @@ bool DatabaseManager::createChargeRecordsTable()
     if (!query.exec(queryStr)) {
         m_lastError = query.lastError().text();
         qWarning() << "Failed to create charge_records table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::createLogsTable()
+{
+    QString queryStr = 
+        "CREATE TABLE IF NOT EXISTS logs ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "user_id INTEGER,"
+        "operation_type TEXT NOT NULL,"
+        "entity_type TEXT,"
+        "entity_id INTEGER,"
+        "description TEXT NOT NULL,"
+        "created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "FOREIGN KEY (user_id) REFERENCES users(id)"
+        ");";
+
+    QSqlQuery query(m_database);
+    if (!query.exec(queryStr)) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to create logs table:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::logOperation(int userId, const QString& operationType, const QString& entityType, int entityId, const QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO logs (user_id, operation_type, entity_type, entity_id, description) VALUES (:userId, :operationType, :entityType, :entityId, :description)");
+    query.bindValue(":userId", userId);
+    query.bindValue(":operationType", operationType);
+    query.bindValue(":entityType", entityType);
+    query.bindValue(":entityId", entityId);
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to log operation:" << m_lastError;
         return false;
     }
     return true;
