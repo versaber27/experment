@@ -63,6 +63,22 @@ private:
     bool updateMedicineStock(int medicineId, int quantityChange);
     bool decreaseMedicineStockForPrescription(int prescriptionId);
     bool increaseMedicineStockForPrescription(int prescriptionId);
+    
+    // 角色相关操作
+    bool addRole(const QString& roleName, const QString& description);
+    bool updateRole(int roleId, const QString& roleName, const QString& description);
+    bool deleteRole(int roleId);
+    bool getRoleById(int roleId, QString& roleName, QString& description);
+    
+    // 用户相关操作
+    bool addUser(const QString& username, const QString& password, int roleId, const QString& realName, const QString& phone, const QString& email);
+    bool updateUser(int userId, const QString& username, int roleId, const QString& realName, const QString& phone, const QString& email, bool isActive);
+    bool updateUserPassword(int userId, const QString& password);
+    bool deleteUser(int userId);
+    bool getUserByUsername(const QString& username, int& userId, QString& passwordHash, int& roleId, QString& realName, QString& phone, QString& email, bool& isActive);
+    bool getUserById(int userId, QString& username, int& roleId, QString& realName, QString& phone, QString& email, bool& isActive);
+    bool authenticateUser(const QString& username, const QString& password, int& userId, int& roleId, QString& realName);
+    bool updateUserLastLogin(int userId);
 
     // 成员变量
     QString m_databasePath;

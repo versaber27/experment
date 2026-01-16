@@ -15,9 +15,12 @@ SOURCES += \
     database/entities/visit.cpp \
     database/entities/prescription.cpp \
     database/entities/prescriptionmedicine.cpp \
+    database/entities/role.cpp \
+    database/entities/user.cpp \
     database/models/patientmodel.cpp \
     database/models/visitmodel.cpp \
     database/models/prescriptionmodel.cpp \
+    database/models/usermodel.cpp \
     addpatientdialog.cpp
 
 # 头文件
@@ -29,9 +32,12 @@ HEADERS += \
     database/entities/visit.h \
     database/entities/prescription.h \
     database/entities/prescriptionmedicine.h \
+    database/entities/role.h \
+    database/entities/user.h \
     database/models/patientmodel.h \
     database/models/visitmodel.h \
     database/models/prescriptionmodel.h \
+    database/models/usermodel.h \
     addpatientdialog.h
 
 FORMS += \

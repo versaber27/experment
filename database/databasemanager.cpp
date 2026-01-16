@@ -548,3 +548,233 @@ bool DatabaseManager::increaseMedicineStockForPrescription(int prescriptionId)
 
     return true;
 }
+
+bool DatabaseManager::addRole(const QString& roleName, const QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO roles (role_name, description) VALUES (:roleName, :description)");
+    query.bindValue(":roleName", roleName);
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add role:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateRole(int roleId, const QString& roleName, const QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE roles SET role_name = :roleName, description = :description WHERE id = :roleId");
+    query.bindValue(":roleId", roleId);
+    query.bindValue(":roleName", roleName);
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update role:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deleteRole(int roleId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM roles WHERE id = :roleId");
+    query.bindValue(":roleId", roleId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete role:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::getRoleById(int roleId, QString& roleName, QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("SELECT role_name, description FROM roles WHERE id = :roleId");
+    query.bindValue(":roleId", roleId);
+
+    if (!query.exec() || !query.next()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to get role by id:" << m_lastError;
+        return false;
+    }
+
+    roleName = query.value("role_name").toString();
+    description = query.value("description").toString();
+    return true;
+}
+
+bool DatabaseManager::addUser(const QString& username, const QString& password, int roleId, const QString& realName, const QString& phone, const QString& email)
+{
+    // 对密码进行哈希处理
+    QString passwordHash = User::hashPassword(password);
+
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO users (username, password_hash, role_id, real_name, phone, email) VALUES (:username, :passwordHash, :roleId, :realName, :phone, :email)");
+    query.bindValue(":username", username);
+    query.bindValue(":passwordHash", passwordHash);
+    query.bindValue(":roleId", roleId);
+    query.bindValue(":realName", realName);
+    query.bindValue(":phone", phone);
+    query.bindValue(":email", email);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add user:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateUser(int userId, const QString& username, int roleId, const QString& realName, const QString& phone, const QString& email, bool isActive)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE users SET username = :username, role_id = :roleId, real_name = :realName, phone = :phone, email = :email, is_active = :isActive WHERE id = :userId");
+    query.bindValue(":userId", userId);
+    query.bindValue(":username", username);
+    query.bindValue(":roleId", roleId);
+    query.bindValue(":realName", realName);
+    query.bindValue(":phone", phone);
+    query.bindValue(":email", email);
+    query.bindValue(":isActive", isActive ? 1 : 0);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update user:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateUserPassword(int userId, const QString& password)
+{
+    // 对密码进行哈希处理
+    QString passwordHash = User::hashPassword(password);
+
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE users SET password_hash = :passwordHash WHERE id = :userId");
+    query.bindValue(":userId", userId);
+    query.bindValue(":passwordHash", passwordHash);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update user password:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deleteUser(int userId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM users WHERE id = :userId");
+    query.bindValue(":userId", userId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete user:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::getUserByUsername(const QString& username, int& userId, QString& passwordHash, int& roleId, QString& realName, QString& phone, QString& email, bool& isActive)
+{
+    QSqlQuery query(m_database);
+    query.prepare("SELECT id, password_hash, role_id, real_name, phone, email, is_active FROM users WHERE username = :username");
+    query.bindValue(":username", username);
+
+    if (!query.exec() || !query.next()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to get user by username:" << m_lastError;
+        return false;
+    }
+
+    userId = query.value("id").toInt();
+    passwordHash = query.value("password_hash").toString();
+    roleId = query.value("role_id").toInt();
+    realName = query.value("real_name").toString();
+    phone = query.value("phone").toString();
+    email = query.value("email").toString();
+    isActive = query.value("is_active").toInt() == 1;
+    return true;
+}
+
+bool DatabaseManager::getUserById(int userId, QString& username, int& roleId, QString& realName, QString& phone, QString& email, bool& isActive)
+{
+    QSqlQuery query(m_database);
+    query.prepare("SELECT username, role_id, real_name, phone, email, is_active FROM users WHERE id = :userId");
+    query.bindValue(":userId", userId);
+
+    if (!query.exec() || !query.next()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to get user by id:" << m_lastError;
+        return false;
+    }
+
+    username = query.value("username").toString();
+    roleId = query.value("role_id").toInt();
+    realName = query.value("real_name").toString();
+    phone = query.value("phone").toString();
+    email = query.value("email").toString();
+    isActive = query.value("is_active").toInt() == 1;
+    return true;
+}
+
+bool DatabaseManager::authenticateUser(const QString& username, const QString& password, int& userId, int& roleId, QString& realName)
+{
+    // 获取用户信息
+    QString passwordHash;
+    QString phone;
+    QString email;
+    bool isActive;
+
+    if (!getUserByUsername(username, userId, passwordHash, roleId, realName, phone, email, isActive)) {
+        return false;
+    }
+
+    // 检查用户是否激活
+    if (!isActive) {
+        m_lastError = "User account is not active";
+        qWarning() << m_lastError;
+        return false;
+    }
+
+    // 验证密码
+    User user;
+    user.setPasswordHash(passwordHash);
+    if (!user.checkPassword(password)) {
+        m_lastError = "Invalid password";
+        qWarning() << m_lastError;
+        return false;
+    }
+
+    // 更新最后登录时间
+    if (!updateUserLastLogin(userId)) {
+        qWarning() << "Failed to update last login time:" << m_lastError;
+        // 不影响认证结果
+    }
+
+    return true;
+}
+
+bool DatabaseManager::updateUserLastLogin(int userId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = :userId");
+    query.bindValue(":userId", userId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update user last login:" << m_lastError;
+        return false;
+    }
+    return true;
+}
