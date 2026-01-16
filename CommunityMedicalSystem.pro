@@ -44,3 +44,18 @@ CONFIG(debug, debug|release) {
 
 # 编译器选项
 QMAKE_CXXFLAGS += -Wno-unused-parameter
+
+win32 {
+    DEPLOY_DIR = c:/Users/vergil/Desktop/CommunityMedicalSystem/可执行程序
+    CONFIG(debug, debug|release) {
+        EXE_PATH = $$OUT_PWD/debug/$$TARGET.exe
+    } else {
+        EXE_PATH = $$OUT_PWD/release/$$TARGET.exe
+    }
+    deploy.commands = $$quote(cmd /c if not exist \"$$DEPLOY_DIR\" mkdir \"$$DEPLOY_DIR\")
+    deploy.commands += $$quote(\"$$[QT_HOST_BINS]/windeployqt.exe\" --dir \"$$DEPLOY_DIR\" --compiler-runtime \"$$EXE_PATH\")
+    deploy.commands += $$quote(cmd /c copy /Y \"$$EXE_PATH\" \"$$DEPLOY_DIR\\\")
+    deploy.depends = $$TARGET
+    QMAKE_EXTRA_TARGETS += deploy
+    POST_TARGETDEPS += deploy
+}
