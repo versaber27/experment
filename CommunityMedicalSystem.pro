@@ -13,6 +13,8 @@ SOURCES += \
     database/entities/patient.cpp \
     database/entities/doctor.cpp \
     database/entities/visit.cpp \
+    database/entities/prescription.cpp \
+    database/entities/prescriptionmedicine.cpp \
     database/models/patientmodel.cpp \
     database/models/visitmodel.cpp \
     addpatientdialog.cpp
@@ -24,6 +26,8 @@ HEADERS += \
     database/entities/patient.h \
     database/entities/doctor.h \
     database/entities/visit.h \
+    database/entities/prescription.h \
+    database/entities/prescriptionmedicine.h \
     database/models/patientmodel.h \
     database/models/visitmodel.h \
     addpatientdialog.h
