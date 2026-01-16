@@ -81,6 +81,17 @@ private:
     bool getUserById(int userId, QString& username, int& roleId, QString& realName, QString& phone, QString& email, bool& isActive);
     bool authenticateUser(const QString& username, const QString& password, int& userId, int& roleId, QString& realName);
     bool updateUserLastLogin(int userId);
+    
+    // 收费项目相关操作
+    bool addCharge(const QString& chargeCode, const QString& name, const QString& category, double price, const QString& description);
+    bool updateCharge(int chargeId, const QString& chargeCode, const QString& name, const QString& category, double price, const QString& description);
+    bool deleteCharge(int chargeId);
+    
+    // 收费记录相关操作
+    bool addChargeRecord(const QString& recordNo, int patientId, int visitId, double totalAmount, const QString& paymentMethod, const QString& paymentStatus, int createdBy);
+    bool updateChargeRecord(int chargeRecordId, const QString& paymentMethod, const QString& paymentStatus);
+    bool updateChargeRecordPaymentStatus(int chargeRecordId, const QString& paymentStatus);
+    bool deleteChargeRecord(int chargeRecordId);
 
     // 成员变量
     QString m_databasePath;

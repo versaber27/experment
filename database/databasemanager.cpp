@@ -831,3 +831,119 @@ bool DatabaseManager::updateUserLastLogin(int userId)
     }
     return true;
 }
+
+bool DatabaseManager::addCharge(const QString& chargeCode, const QString& name, const QString& category, double price, const QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO charges (charge_code, name, category, price, description) VALUES (:chargeCode, :name, :category, :price, :description)");
+    query.bindValue(":chargeCode", chargeCode);
+    query.bindValue(":name", name);
+    query.bindValue(":category", category);
+    query.bindValue(":price", price);
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add charge:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateCharge(int chargeId, const QString& chargeCode, const QString& name, const QString& category, double price, const QString& description)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE charges SET charge_code = :chargeCode, name = :name, category = :category, price = :price, description = :description WHERE id = :chargeId");
+    query.bindValue(":chargeId", chargeId);
+    query.bindValue(":chargeCode", chargeCode);
+    query.bindValue(":name", name);
+    query.bindValue(":category", category);
+    query.bindValue(":price", price);
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update charge:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deleteCharge(int chargeId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM charges WHERE id = :chargeId");
+    query.bindValue(":chargeId", chargeId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete charge:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::addChargeRecord(const QString& recordNo, int patientId, int visitId, double totalAmount, const QString& paymentMethod, const QString& paymentStatus, int createdBy)
+{
+    QSqlQuery query(m_database);
+    query.prepare("INSERT INTO charge_records (record_no, patient_id, visit_id, total_amount, payment_method, payment_status, created_by) VALUES (:recordNo, :patientId, :visitId, :totalAmount, :paymentMethod, :paymentStatus, :createdBy)");
+    query.bindValue(":recordNo", recordNo);
+    query.bindValue(":patientId", patientId);
+    query.bindValue(":visitId", visitId);
+    query.bindValue(":totalAmount", totalAmount);
+    query.bindValue(":paymentMethod", paymentMethod);
+    query.bindValue(":paymentStatus", paymentStatus);
+    query.bindValue(":createdBy", createdBy);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to add charge record:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateChargeRecord(int chargeRecordId, const QString& paymentMethod, const QString& paymentStatus)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE charge_records SET payment_method = :paymentMethod, payment_status = :paymentStatus, payment_date = CASE WHEN :paymentStatus = 'paid' THEN CURRENT_TIMESTAMP ELSE payment_date END WHERE id = :chargeRecordId");
+    query.bindValue(":chargeRecordId", chargeRecordId);
+    query.bindValue(":paymentMethod", paymentMethod);
+    query.bindValue(":paymentStatus", paymentStatus);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update charge record:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::updateChargeRecordPaymentStatus(int chargeRecordId, const QString& paymentStatus)
+{
+    QSqlQuery query(m_database);
+    query.prepare("UPDATE charge_records SET payment_status = :paymentStatus, payment_date = CASE WHEN :paymentStatus = 'paid' THEN CURRENT_TIMESTAMP ELSE payment_date END WHERE id = :chargeRecordId");
+    query.bindValue(":chargeRecordId", chargeRecordId);
+    query.bindValue(":paymentStatus", paymentStatus);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to update charge record payment status:" << m_lastError;
+        return false;
+    }
+    return true;
+}
+
+bool DatabaseManager::deleteChargeRecord(int chargeRecordId)
+{
+    QSqlQuery query(m_database);
+    query.prepare("DELETE FROM charge_records WHERE id = :chargeRecordId");
+    query.bindValue(":chargeRecordId", chargeRecordId);
+
+    if (!query.exec()) {
+        m_lastError = query.lastError().text();
+        qWarning() << "Failed to delete charge record:" << m_lastError;
+        return false;
+    }
+    return true;
+}
