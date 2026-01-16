@@ -1,0 +1,16 @@
+build/
+.qtc_clangd/
+.vscode/
+.idea/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.o
+*.obj
+*.log
+*.cache
+*.user
+Thumbs.db
+.DS_Store
