@@ -1,4 +1,4 @@
-QT += core gui sql network widgets
+QT += core gui sql network widgets charts
 
 CONFIG += c++17
 
@@ -22,7 +22,8 @@ SOURCES += \
     database/models/visitmodel.cpp \
     database/models/prescriptionmodel.cpp \
     database/models/usermodel.cpp \
-    addpatientdialog.cpp
+    addpatientdialog.cpp \
+    statisticsdialog.cpp
 
 # 头文件
 HEADERS += \
@@ -40,7 +41,8 @@ HEADERS += \
     database/models/visitmodel.h \
     database/models/prescriptionmodel.h \
     database/models/usermodel.h \
-    addpatientdialog.h
+    addpatientdialog.h \
+    statisticsdialog.h
 
 FORMS += \
     mainwindow.ui

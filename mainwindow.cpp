@@ -143,7 +143,7 @@ void MainWindow::setupConnections()
 
     // 统计分析标签页
     connect(ui->btn_generate_report, &QPushButton::clicked, this, &MainWindow::onGenerateDailyReport);
-    connect(ui->btn_monthly_report, &QPushButton::clicked, this, &MainWindow::onGenerateMonthlyReport);
+    connect(ui->btn_monthly_report, &QPushButton::clicked, this, &MainWindow::onViewStatistics);
 
     // 表格选择变化
     connect(ui->tableView_patients->selectionModel(), &QItemSelectionModel::selectionChanged,
@@ -1538,7 +1538,13 @@ void MainWindow::onGenerateMonthlyReport()
     report += QString("\n生成时间: %1").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
 
     ui->textEdit_stats->setText(report);
-    statusBar()->showMessage("月报生成完成", 2000);
+    statusBar()->showMessage("月报表生成完成", 2000);
+}
+
+void MainWindow::onViewStatistics()
+{
+    StatisticsDialog *dialog = new StatisticsDialog(&m_dbManager, this);
+    dialog->exec();
 }
 
 void MainWindow::updateStatistics()

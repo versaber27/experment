@@ -7,6 +7,7 @@
 #include "database/models/patientmodel.h"
 #include "database/models/visitmodel.h"
 #include "addpatientdialog.h"
+#include "statisticsdialog.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -67,6 +68,7 @@ private slots:
     void onGenerateDailyReport();
     void onGenerateMonthlyReport();
     void updateStatistics();
+    void onViewStatistics();
 
     // 表格选择变化
     void onPatientSelectionChanged();
