@@ -189,9 +189,14 @@ bool DatabaseManager::createVisitsTable()
         "patient_id INTEGER NOT NULL,"
         "doctor_id INTEGER NOT NULL,"
         "visit_date DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        "symptoms TEXT,"
         "diagnosis TEXT,"
+        "treatment TEXT,"
+        "notes TEXT,"
+        "appointment_id INTEGER,"
         "FOREIGN KEY (patient_id) REFERENCES patients(id),"
-        "FOREIGN KEY (doctor_id) REFERENCES doctors(id)"
+        "FOREIGN KEY (doctor_id) REFERENCES doctors(id),"
+        "FOREIGN KEY (appointment_id) REFERENCES appointments(id)"
         ");";
 
     QSqlQuery query(m_database);
